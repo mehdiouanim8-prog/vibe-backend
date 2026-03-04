@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from db.database import get_db
+from database import get_db
 from models.models import User, Post, Like, Comment, Follow
 from schemas.schemas import PostCreate, PostOut, CommentCreate, CommentOut, FeedOut
 from core.security import get_current_user
