@@ -2,9 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
-
 # ─── User Schemas ───────────────────────────────────────────
-
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
@@ -26,7 +24,6 @@ class UserOut(BaseModel):
     created_at: datetime
     followers_count: Optional[int] = 0
     following_count: Optional[int] = 0
-
     class Config:
         orm_mode = True
 
@@ -34,9 +31,7 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-
 # ─── Token Schemas ───────────────────────────────────────────
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -44,9 +39,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_id: Optional[int] = None
 
-
 # ─── Post Schemas ────────────────────────────────────────────
-
 class PostCreate(BaseModel):
     content: str
     image_url: Optional[str] = None
@@ -60,13 +53,10 @@ class PostOut(BaseModel):
     created_at: datetime
     likes_count: Optional[int] = 0
     comments_count: Optional[int] = 0
-
     class Config:
         orm_mode = True
 
-
 # ─── Comment Schemas ─────────────────────────────────────────
-
 class CommentCreate(BaseModel):
     content: str
 
@@ -76,13 +66,10 @@ class CommentOut(BaseModel):
     author: UserOut
     post_id: int
     created_at: datetime
-
     class Config:
         orm_mode = True
 
-
 # ─── Feed Schema ─────────────────────────────────────────────
-
 class FeedOut(BaseModel):
     posts: List[PostOut]
     total: int
