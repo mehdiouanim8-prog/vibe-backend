@@ -28,7 +28,7 @@ class UserOut(BaseModel):
     following_count: Optional[int] = 0
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -62,7 +62,7 @@ class PostOut(BaseModel):
     comments_count: Optional[int] = 0
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 # ─── Comment Schemas ─────────────────────────────────────────
@@ -78,7 +78,7 @@ class CommentOut(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 # ─── Feed Schema ─────────────────────────────────────────────
