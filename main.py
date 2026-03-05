@@ -4,7 +4,6 @@ from database import engine, Base
 import auth, users, posts, communities, events, jobs, messages, admin, profiles
 
 # Create all tables
-Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
