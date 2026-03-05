@@ -13,6 +13,8 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     if db.query(User).filter(User.username == user_data.username).first():
         raise HTTPException(status_code=400, detail="Username already taken")
+    if len(user_data.password) > 72:
+        raise HTTPException(status_code=400, detail="Password must be 72 characters or less")
     user = User(
         username=user_data.username,
         email=user_data.email,
