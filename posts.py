@@ -20,6 +20,26 @@ def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: U
     post.likes_count = 0
     post.comments_count = 0
     return post
+    
+@router.get("/all", response_model=FeedOut)
+def get_all_posts(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, le=50),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    total = db.query(Post).count()
+    posts = (
+        db.query(Post)
+        .order_by(desc(Post.created_at))
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+    for post in posts:
+        post.likes_count = len(post.likes)
+        post.comments_count = len(post.comments)
+    return {"posts": posts, "total": total, "page": page, "per_page": per_page}
 
 @router.get("/feed", response_model=FeedOut)
 def get_feed(
