@@ -41,6 +41,7 @@ def get_all_posts(
     for post in posts:
         post.likes_count = len(post.likes)
         post.comments_count = len(post.comments)
+        post.is_liked = any(like.user_id == current_user.id for like in post.likes)
     return {"posts": posts, "total": total, "page": page, "per_page": per_page}
 
 # ─── Get Feed (Following) ────────────────────────────────────
@@ -66,6 +67,7 @@ def get_feed(
     for post in posts:
         post.likes_count = len(post.likes)
         post.comments_count = len(post.comments)
+        post.is_liked = any(like.user_id == current_user.id for like in post.likes)
     return {"posts": posts, "total": total, "page": page, "per_page": per_page}
 
 # ─── Get Single Post ─────────────────────────────────────────
