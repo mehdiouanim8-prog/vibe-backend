@@ -125,11 +125,11 @@ class PostOut(BaseModel):
     content: str
     image_url: Optional[str]
     author_id: int
-    author: UserOut
-    community_id: Optional[int]
     created_at: datetime
-    likes_count: Optional[int] = 0
-    comments_count: Optional[int] = 0
+    likes_count: int = 0
+    comments_count: int = 0
+    is_liked: bool = False
+    author: Optional[UserOut] = None
     class Config:
         orm_mode = True
 
