@@ -9,7 +9,7 @@ from typing import List
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
-# ─── Posts ───────────────────────────────────────────────────
+# ─── Create Post ─────────────────────────────────────────────
 
 @router.post("/", response_model=PostOut, status_code=201)
 def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -20,7 +20,9 @@ def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: U
     post.likes_count = 0
     post.comments_count = 0
     return post
-    
+
+# ─── Get All Posts (Global Feed) ─────────────────────────────
+
 @router.get("/all", response_model=FeedOut)
 def get_all_posts(
     page: int = Query(1, ge=1),
@@ -40,6 +42,8 @@ def get_all_posts(
         post.likes_count = len(post.likes)
         post.comments_count = len(post.comments)
     return {"posts": posts, "total": total, "page": page, "per_page": per_page}
+
+# ─── Get Feed (Following) ────────────────────────────────────
 
 @router.get("/feed", response_model=FeedOut)
 def get_feed(
@@ -64,6 +68,8 @@ def get_feed(
         post.comments_count = len(post.comments)
     return {"posts": posts, "total": total, "page": page, "per_page": per_page}
 
+# ─── Get Single Post ─────────────────────────────────────────
+
 @router.get("/{post_id}", response_model=PostOut)
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(Post).filter(Post.id == post_id).first()
@@ -72,6 +78,8 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
     post.likes_count = len(post.likes)
     post.comments_count = len(post.comments)
     return post
+
+# ─── Delete Post ─────────────────────────────────────────────
 
 @router.delete("/{post_id}", status_code=204)
 def delete_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -92,20 +100,13 @@ def like_post(post_id: int, db: Session = Depends(get_db), current_user: User = 
         raise HTTPException(status_code=404, detail="Post not found")
     existing = db.query(Like).filter(Like.user_id == current_user.id, Like.post_id == post_id).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Already liked this post")
+        db.delete(existing)
+        db.commit()
+        return {"message": "Post unliked"}
     like = Like(user_id=current_user.id, post_id=post_id)
     db.add(like)
     db.commit()
     return {"message": "Post liked"}
-
-@router.delete("/{post_id}/like")
-def unlike_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    like = db.query(Like).filter(Like.user_id == current_user.id, Like.post_id == post_id).first()
-    if not like:
-        raise HTTPException(status_code=400, detail="You haven't liked this post")
-    db.delete(like)
-    db.commit()
-    return {"message": "Post unliked"}
 
 # ─── Comments ────────────────────────────────────────────────
 
