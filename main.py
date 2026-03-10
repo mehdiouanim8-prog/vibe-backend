@@ -6,6 +6,7 @@ import auth, users, posts, communities, events, jobs, messages, admin, profiles
 
 # ─── Safe DB Migration ───────────────────────────────────────
 # Adds reaction_type column to likes table if it doesn't exist yet
+# Safe DB Migration
 try:
     with engine.connect() as conn:
         inspector = inspect(engine)
@@ -15,9 +16,17 @@ try:
             if "reaction_type" not in columns:
                 conn.execute(text("ALTER TABLE likes ADD COLUMN reaction_type VARCHAR DEFAULT 'like'"))
                 conn.commit()
+        if "posts" in existing_tables:
+            columns = [col["name"] for col in inspector.get_columns("posts")]
+            if "tags" not in columns:
+                conn.execute(text("ALTER TABLE posts ADD COLUMN tags VARCHAR"))
+                conn.commit()
+            if "feeling" not in columns:
+                conn.execute(text("ALTER TABLE posts ADD COLUMN feeling VARCHAR"))
+                conn.commit()
 except Exception as e:
     print(f"Migration warning (non-fatal): {e}")
-
+    
 # ─── Create All Tables ───────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
