@@ -76,6 +76,8 @@ def get_feed(
         post.likes_count = len(post.likes)
         post.comments_count = len(post.comments)
         post.is_liked = any(like.user_id == current_user.id for like in post.likes)
+        user_reaction = next((like.reaction_type for like in post.likes if like.user_id == current_user.id), None)
+        post.user_reaction = user_reaction
     return {"posts": posts, "total": total, "page": page, "per_page": per_page}
 
 # ─── Get Single Post ─────────────────────────────────────────
