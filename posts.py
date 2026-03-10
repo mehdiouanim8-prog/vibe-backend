@@ -13,14 +13,20 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 
 @router.post("/", response_model=PostOut, status_code=201)
 def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    post = Post(content=data.content, image_url=data.image_url, author_id=current_user.id)
+    post = Post(
+        content=data.content,
+        image_url=data.image_url,
+        author_id=current_user.id,
+        tags=data.tags,
+        feeling=data.feeling,
+    )
     db.add(post)
     db.commit()
     db.refresh(post)
     post.likes_count = 0
     post.comments_count = 0
     return post
-
+    
 # ─── Get All Posts (Global Feed) ─────────────────────────────
 
 @router.get("/all", response_model=FeedOut)
