@@ -124,7 +124,7 @@ class Post(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete")
-    likes = relationship("Like", back_populates="post", cascade="all, delete")
+    likes = relationship("Reaction", back_populates="post", cascade="all, delete")
     community = relationship("Community", back_populates="posts")
     tags = Column(String, nullable=True)  # comma separated e.g. "education,finance"
     feeling = Column(String, nullable=True)  # e.g. "inspiring"
