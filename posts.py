@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from database import get_db
-from models import User, Post, Reaction, Comment, Follow
+from models import User, Post, Like, Comment, Follow
 from schemas import PostCreate, PostOut, CommentCreate, CommentOut, FeedOut
 from security import get_current_user
 from typing import List
@@ -110,13 +110,13 @@ def like_post(post_id: int, db: Session = Depends(get_db), current_user: User = 
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    existing = db.query(Reaction).filter(Reaction.user_id == current_user.id, Reaction.post_id == post_id).first()
+    existing = db.query(Like).filter(Like.user_id == current_user.id, Like.post_id == post_id).first()
     if existing:
         db.delete(existing)
         db.commit()
         return {"message": "Post unliked"}
-    reaction = Reaction(user_id=current_user.id, post_id=post_id, reaction_type="like")
-    db.add(reaction)
+    like = Like(user_id=current_user.id, post_id=post_id, reaction_type="like")
+    db.add(like)
     db.commit()
     return {"message": "Post liked"}
 
