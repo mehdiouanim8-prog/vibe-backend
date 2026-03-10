@@ -126,7 +126,7 @@ class Post(Base):
     likes = relationship("Like", back_populates="post", cascade="all, delete")
     community = relationship("Community", back_populates="posts")
     tags = Column(String, nullable=True)  # comma separated e.g. "education,finance"
-feeling = Column(String, nullable=True)  # e.g. "inspiring"
+    feeling = Column(String, nullable=True)  # e.g. "inspiring"
 
 class Comment(Base):
     __tablename__ = "comments"
