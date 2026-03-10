@@ -125,6 +125,8 @@ class Post(Base):
     comments = relationship("Comment", back_populates="post", cascade="all, delete")
     likes = relationship("Like", back_populates="post", cascade="all, delete")
     community = relationship("Community", back_populates="posts")
+    tags = Column(String, nullable=True)  # comma separated e.g. "education,finance"
+feeling = Column(String, nullable=True)  # e.g. "inspiring"
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -136,14 +138,15 @@ class Comment(Base):
     author = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
 
-class Like(Base):
-    __tablename__ = "likes"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
+class Reaction(Base):
+    __tablename__ = "reactions"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    post_id = Column(Integer, ForeignKey("posts.id"))
+    reaction_type = Column(String, default="like")  # like, love, encourage, surprised, dislike
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    user = relationship("User", back_populates="likes")
-    post = relationship("Post", back_populates="likes")
+    user = relationship("User", back_populates="reactions")
+    post = relationship("Post", back_populates="reactions")
 
 class Follow(Base):
     __tablename__ = "follows"
