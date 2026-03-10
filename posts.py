@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from database import get_db
-from models import User, Post, Like, Comment, Follow
+from models import User, Post, Reaction, Comment, Follow
 from schemas import PostCreate, PostOut, CommentCreate, CommentOut, FeedOut
 from security import get_current_user
 from typing import List
