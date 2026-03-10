@@ -53,6 +53,7 @@ class User(Base):
     stripe_customer_id = Column(String(255), nullable=True)
     stripe_subscription_id = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    reactions = relationship("Reaction", back_populates="user")
 
     posts = relationship("Post", back_populates="author", cascade="all, delete")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
@@ -127,6 +128,7 @@ class Post(Base):
     community = relationship("Community", back_populates="posts")
     tags = Column(String, nullable=True)  # comma separated e.g. "education,finance"
     feeling = Column(String, nullable=True)  # e.g. "inspiring"
+    reactions = relationship("Reaction", back_populates="post", cascade="all, delete")
 
 class Comment(Base):
     __tablename__ = "comments"
