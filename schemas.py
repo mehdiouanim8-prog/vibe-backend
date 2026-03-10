@@ -119,16 +119,21 @@ class PostCreate(BaseModel):
     content: str
     image_url: Optional[str] = None
     community_id: Optional[int] = None
+    tags: Optional[str] = None
+    feeling: Optional[str] = None
 
 class PostOut(BaseModel):
     id: int
     content: str
     image_url: Optional[str]
+    tags: Optional[str] = None
+    feeling: Optional[str] = None
     author_id: int
     created_at: datetime
     likes_count: int = 0
     comments_count: int = 0
     is_liked: bool = False
+    user_reaction: Optional[str] = None
     author: Optional[UserOut] = None
     class Config:
         orm_mode = True
