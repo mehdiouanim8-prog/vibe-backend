@@ -110,13 +110,13 @@ def like_post(post_id: int, db: Session = Depends(get_db), current_user: User = 
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    existing = db.query(Like).filter(Like.user_id == current_user.id, Like.post_id == post_id).first()
+    existing = db.query(Reaction).filter(Reaction.user_id == current_user.id, Reaction.post_id == post_id).first()
     if existing:
         db.delete(existing)
         db.commit()
         return {"message": "Post unliked"}
-    like = Like(user_id=current_user.id, post_id=post_id)
-    db.add(like)
+    reaction = Reaction(user_id=current_user.id, post_id=post_id, reaction_type="like")
+    db.add(reaction)
     db.commit()
     return {"message": "Post liked"}
 
