@@ -53,11 +53,10 @@ class User(Base):
     stripe_customer_id = Column(String(255), nullable=True)
     stripe_subscription_id = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    reactions = relationship("Reaction", back_populates="user")
 
     posts = relationship("Post", back_populates="author", cascade="all, delete")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
-    reactions = relationship("Reaction", back_populates="user", cascade="all, delete")
+    likes = relationship("Like", back_populates="user", cascade="all, delete")
     following = relationship("Follow", foreign_keys="Follow.follower_id", back_populates="follower", cascade="all, delete")
     followers = relationship("Follow", foreign_keys="Follow.following_id", back_populates="following", cascade="all, delete")
     experiences = relationship("Experience", back_populates="user", cascade="all, delete")
@@ -124,9 +123,10 @@ class Post(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     tags = Column(String, nullable=True)
     feeling = Column(String, nullable=True)
+
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete")
-    likes = relationship("Reaction", back_populates="post", cascade="all, delete")
+    likes = relationship("Like", back_populates="post", cascade="all, delete")
     community = relationship("Community", back_populates="posts")
 
 class Comment(Base):
@@ -139,15 +139,15 @@ class Comment(Base):
     author = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
 
-class Reaction(Base):
-    __tablename__ = "reactions"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    post_id = Column(Integer, ForeignKey("posts.id"))
-    reaction_type = Column(String, default="like")  # like, love, encourage, surprised, dislike
+class Like(Base):
+    __tablename__ = "likes"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
+    reaction_type = Column(String, default="like")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    user = relationship("User", back_populates="reactions")
-    post = relationship("Post", back_populates="reactions")
+    user = relationship("User", back_populates="likes")
+    post = relationship("Post", back_populates="likes")
 
 class Follow(Base):
     __tablename__ = "follows"
