@@ -57,7 +57,7 @@ class User(Base):
 
     posts = relationship("Post", back_populates="author", cascade="all, delete")
     comments = relationship("Comment", back_populates="author", cascade="all, delete")
-    likes = relationship("Like", back_populates="user", cascade="all, delete")
+    reactions = relationship("Reaction", back_populates="user", cascade="all, delete")
     following = relationship("Follow", foreign_keys="Follow.follower_id", back_populates="follower", cascade="all, delete")
     followers = relationship("Follow", foreign_keys="Follow.following_id", back_populates="following", cascade="all, delete")
     experiences = relationship("Experience", back_populates="user", cascade="all, delete")
