@@ -174,3 +174,59 @@ class Message(Base):
     content     = Column(Text, nullable=False)
     is_read     = Column(Boolean, default=False)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Experience(Base):
+    __tablename__ = "experiences"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title       = Column(String, nullable=False)
+    company     = Column(String, nullable=False)
+    location    = Column(String, nullable=True)
+    start_date  = Column(String, nullable=True)   # e.g. "Jan 2022"
+    end_date    = Column(String, nullable=True)   # e.g. "Present"
+    description = Column(Text, nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", backref="experiences")
+
+
+class Education(Base):
+    __tablename__ = "educations"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+    school      = Column(String, nullable=False)
+    degree      = Column(String, nullable=True)
+    field       = Column(String, nullable=True)
+    start_year  = Column(String, nullable=True)
+    end_year    = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", backref="educations")
+
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title       = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    url         = Column(String, nullable=True)
+    image_url   = Column(String, nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", backref="projects")
+
+
+class Skill(Base):
+    __tablename__ = "skills"
+
+    id      = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name    = Column(String, nullable=False)
+
+    user = relationship("User", backref="skills")
