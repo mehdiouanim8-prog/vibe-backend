@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 from schemas import UserCreate, UserOut, UserLogin, Token
+from pydantic import BaseModel
+class UserLogin(BaseModel):
+    username: str
+    password: str
 from security import hash_password, verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
