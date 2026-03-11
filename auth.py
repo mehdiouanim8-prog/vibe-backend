@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
 from database import get_db
 from models import User
-from schemas import UserCreate, UserOut, UserLogin, Token
-from pydantic import BaseModel
-class UserLogin(BaseModel):
-    username: str
-    password: str
+from schemas import UserCreate, UserOut, Token
 from security import hash_password, verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -29,6 +33,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
     return user
+
 
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
