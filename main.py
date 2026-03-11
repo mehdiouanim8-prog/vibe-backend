@@ -52,6 +52,8 @@ def run_migrations():
 
 
 run_migrations()
+# create_all safely creates any new tables (experiences, educations, projects, skills, etc.)
+# without touching existing ones
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Element API", version="2.0.0")
