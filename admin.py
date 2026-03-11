@@ -1,75 +1,138 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional, List
 from database import get_db
-from models import User, Post, Community, Job, Event
-from schemas import UserOut, AdminUserUpdate
+from models import User, Post, Notification
 from security import get_current_user
-from typing import List
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
-def require_admin(current_user=Depends(get_current_user)):
+# ─── Admin guard ──────────────────────────────────────────────
+
+def require_admin(current_user: User = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 
-# ─── Users ───────────────────────────────────────────────────
+# ─── Users ────────────────────────────────────────────────────
 
-@router.get("/users", response_model=List[UserOut])
-def list_all_users(db: Session = Depends(get_db), admin=Depends(require_admin)):
+@router.get("/users")
+def admin_list_users(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
     users = db.query(User).order_by(User.created_at.desc()).all()
-    for u in users:
-        u.followers_count = len(u.followers)
-        u.following_count = len(u.following)
-    return users
+    return [
+        {
+            "id":         u.id,
+            "username":   u.username,
+            "email":      u.email,
+            "full_name":  u.full_name,
+            "is_admin":   u.is_admin,
+            "is_active":  u.is_active,
+            "is_on_hold": u.is_on_hold,
+            "is_premium": u.is_premium,
+            "is_verified":u.is_verified,
+            "created_at": u.created_at,
+        }
+        for u in users
+    ]
 
 
-@router.patch("/users/{user_id}", response_model=UserOut)
-def update_user(user_id: int, data: AdminUserUpdate, db: Session = Depends(get_db), admin=Depends(require_admin)):
+@router.patch("/users/{user_id}/hold")
+def hold_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    for field, value in data.dict(exclude_unset=True).items():
-        setattr(user, field, value)
+    user.is_on_hold = True
+    user.is_active = False
     db.commit()
-    db.refresh(user)
-    user.followers_count = len(user.followers)
-    user.following_count = len(user.following)
-    return user
+    return {"message": f"User {user.username} is now on hold"}
+
+
+@router.patch("/users/{user_id}/restore")
+def restore_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_on_hold = False
+    user.is_active = True
+    db.commit()
+    return {"message": f"User {user.username} restored"}
 
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db), admin=Depends(require_admin)):
+def admin_delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.is_admin:
+        raise HTTPException(status_code=400, detail="Cannot delete admin users")
     db.delete(user)
     db.commit()
     return {"message": "User deleted"}
 
 
-# ─── Stats ───────────────────────────────────────────────────
-
-@router.get("/stats")
-def get_stats(db: Session = Depends(get_db), admin=Depends(require_admin)):
-    return {
-        "total_users": db.query(User).count(),
-        "total_posts": db.query(Post).count(),
-        "total_communities": db.query(Community).count(),
-        "total_jobs": db.query(Job).count(),
-        "total_events": db.query(Event).count(),
-        "pro_users": db.query(User).filter(User.plan == "pro").count(),
-        "enterprise_users": db.query(User).filter(User.plan == "enterprise").count(),
-        "verified_companies": db.query(User).filter(User.is_verified_company == True).count(),
-    }
+@router.patch("/users/{user_id}/verify")
+def verify_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_verified = True
+    db.commit()
+    return {"message": f"User {user.username} verified"}
 
 
-# ─── Content Moderation ──────────────────────────────────────
+@router.patch("/users/{user_id}/premium")
+def grant_premium(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_premium = not user.is_premium
+    db.commit()
+    return {"message": f"Premium toggled for {user.username}"}
+
+
+# ─── Posts ────────────────────────────────────────────────────
+
+@router.get("/posts")
+def admin_list_posts(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    posts = db.query(Post).order_by(Post.created_at.desc()).limit(200).all()
+    return posts
+
 
 @router.delete("/posts/{post_id}")
-def admin_delete_post(post_id: int, db: Session = Depends(get_db), admin=Depends(require_admin)):
+def admin_delete_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -78,11 +141,49 @@ def admin_delete_post(post_id: int, db: Session = Depends(get_db), admin=Depends
     return {"message": "Post deleted"}
 
 
-@router.delete("/communities/{community_id}")
-def admin_delete_community(community_id: int, db: Session = Depends(get_db), admin=Depends(require_admin)):
-    community = db.query(Community).filter(Community.id == community_id).first()
-    if not community:
-        raise HTTPException(status_code=404, detail="Community not found")
-    db.delete(community)
+# ─── Push Notifications (broadcast) ──────────────────────────
+
+class PushMessage(BaseModel):
+    message: str
+    type:    Optional[str] = "system"
+
+@router.post("/push")
+def broadcast_push(
+    data: PushMessage,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """Send a push notification to ALL users."""
+    users = db.query(User).filter(User.is_active == True).all()
+    notifs = [
+        Notification(
+            user_id=u.id,
+            type=data.type,
+            message=data.message,
+        )
+        for u in users
+    ]
+    db.bulk_save_objects(notifs)
     db.commit()
-    return {"message": "Community deleted"}
+    return {"message": f"Broadcast sent to {len(notifs)} users"}
+
+
+# ─── Stats ────────────────────────────────────────────────────
+
+@router.get("/stats")
+def admin_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    total_users  = db.query(User).count()
+    active_users = db.query(User).filter(User.is_active == True).count()
+    total_posts  = db.query(Post).count()
+    premium_users= db.query(User).filter(User.is_premium == True).count()
+    verified_users = db.query(User).filter(User.is_verified == True).count()
+    return {
+        "total_users":    total_users,
+        "active_users":   active_users,
+        "total_posts":    total_posts,
+        "premium_users":  premium_users,
+        "verified_users": verified_users,
+    }
