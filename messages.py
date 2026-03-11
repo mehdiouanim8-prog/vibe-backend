@@ -1,189 +1,133 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 from database import get_db
-from models import User, Post, Notification
+from models import Message, User
 from security import get_current_user
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
-# ─── Admin guard ──────────────────────────────────────────────
+# ─── Schemas ──────────────────────────────────────────────────
 
-def require_admin(current_user: User = Depends(get_current_user)):
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
+class MessageCreate(BaseModel):
+    receiver_id: int
+    content:     str
+
+class MessageOut(BaseModel):
+    id:          int
+    sender_id:   int
+    receiver_id: int
+    content:     str
+    is_read:     bool
+    created_at:  datetime
+    class Config: orm_mode = True
+
+class ConversationOut(BaseModel):
+    user_id:     int
+    username:    Optional[str] = None
+    full_name:   Optional[str] = None
+    avatar_url:  Optional[str] = None
+    last_message: Optional[str] = None
+    unread_count: int = 0
 
 
-# ─── Users ────────────────────────────────────────────────────
+# ─── Routes ───────────────────────────────────────────────────
 
-@router.get("/users")
-def admin_list_users(
+@router.get("/conversations", response_model=List[ConversationOut])
+def get_conversations(
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(get_current_user)
 ):
-    users = db.query(User).order_by(User.created_at.desc()).all()
-    return [
-        {
-            "id":         u.id,
-            "username":   u.username,
-            "email":      u.email,
-            "full_name":  u.full_name,
-            "is_admin":   u.is_admin,
-            "is_active":  u.is_active,
-            "is_on_hold": u.is_on_hold,
-            "is_premium": u.is_premium,
-            "is_verified":u.is_verified,
-            "created_at": u.created_at,
-        }
-        for u in users
-    ]
-
-
-@router.patch("/users/{user_id}/hold")
-def hold_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.is_on_hold = True
-    user.is_active = False
-    db.commit()
-    return {"message": f"User {user.username} is now on hold"}
-
-
-@router.patch("/users/{user_id}/restore")
-def restore_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.is_on_hold = False
-    user.is_active = True
-    db.commit()
-    return {"message": f"User {user.username} restored"}
-
-
-@router.delete("/users/{user_id}")
-def admin_delete_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.is_admin:
-        raise HTTPException(status_code=400, detail="Cannot delete admin users")
-    db.delete(user)
-    db.commit()
-    return {"message": "User deleted"}
-
-
-@router.patch("/users/{user_id}/verify")
-def verify_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.is_verified = True
-    db.commit()
-    return {"message": f"User {user.username} verified"}
-
-
-@router.patch("/users/{user_id}/premium")
-def grant_premium(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.is_premium = not user.is_premium
-    db.commit()
-    return {"message": f"Premium toggled for {user.username}"}
-
-
-# ─── Posts ────────────────────────────────────────────────────
-
-@router.get("/posts")
-def admin_list_posts(
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    posts = db.query(Post).order_by(Post.created_at.desc()).limit(200).all()
-    return posts
-
-
-@router.delete("/posts/{post_id}")
-def admin_delete_post(
-    post_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    post = db.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db.delete(post)
-    db.commit()
-    return {"message": "Post deleted"}
-
-
-# ─── Push Notifications (broadcast) ──────────────────────────
-
-class PushMessage(BaseModel):
-    message: str
-    type:    Optional[str] = "system"
-
-@router.post("/push")
-def broadcast_push(
-    data: PushMessage,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    """Send a push notification to ALL users."""
-    users = db.query(User).filter(User.is_active == True).all()
-    notifs = [
-        Notification(
-            user_id=u.id,
-            type=data.type,
-            message=data.message,
+    """Get list of all users current_user has talked to."""
+    messages = db.query(Message).filter(
+        or_(
+            Message.sender_id == current_user.id,
+            Message.receiver_id == current_user.id
         )
-        for u in users
-    ]
-    db.bulk_save_objects(notifs)
-    db.commit()
-    return {"message": f"Broadcast sent to {len(notifs)} users"}
+    ).order_by(Message.created_at.desc()).all()
+
+    seen_users = {}
+    for m in messages:
+        other_id = m.receiver_id if m.sender_id == current_user.id else m.sender_id
+        if other_id not in seen_users:
+            other = db.query(User).filter(User.id == other_id).first()
+            if other:
+                unread = db.query(Message).filter(
+                    Message.sender_id == other_id,
+                    Message.receiver_id == current_user.id,
+                    Message.is_read == False
+                ).count()
+                seen_users[other_id] = {
+                    "user_id":     other.id,
+                    "username":    other.username,
+                    "full_name":   other.full_name,
+                    "avatar_url":  other.avatar_url,
+                    "last_message": m.content,
+                    "unread_count": unread,
+                }
+    return list(seen_users.values())
 
 
-# ─── Stats ────────────────────────────────────────────────────
-
-@router.get("/stats")
-def admin_stats(
+@router.get("/{user_id}", response_model=List[MessageOut])
+def get_conversation(
+    user_id: int,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
+    current_user: User = Depends(get_current_user)
 ):
-    total_users  = db.query(User).count()
-    active_users = db.query(User).filter(User.is_active == True).count()
-    total_posts  = db.query(Post).count()
-    premium_users= db.query(User).filter(User.is_premium == True).count()
-    verified_users = db.query(User).filter(User.is_verified == True).count()
-    return {
-        "total_users":    total_users,
-        "active_users":   active_users,
-        "total_posts":    total_posts,
-        "premium_users":  premium_users,
-        "verified_users": verified_users,
-    }
+    """Get all messages between current_user and user_id."""
+    messages = db.query(Message).filter(
+        or_(
+            and_(Message.sender_id == current_user.id, Message.receiver_id == user_id),
+            and_(Message.sender_id == user_id, Message.receiver_id == current_user.id)
+        )
+    ).order_by(Message.created_at.asc()).all()
+
+    # Mark all received messages as read
+    for m in messages:
+        if m.receiver_id == current_user.id and not m.is_read:
+            m.is_read = True
+    db.commit()
+
+    return messages
+
+
+@router.post("/", response_model=MessageOut, status_code=201)
+def send_message(
+    data: MessageCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if data.receiver_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot message yourself")
+    receiver = db.query(User).filter(User.id == data.receiver_id).first()
+    if not receiver:
+        raise HTTPException(status_code=404, detail="User not found")
+    message = Message(
+        sender_id=current_user.id,
+        receiver_id=data.receiver_id,
+        content=data.content
+    )
+    db.add(message)
+    db.commit()
+    db.refresh(message)
+    return message
+
+
+@router.delete("/{message_id}")
+def delete_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if message.sender_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    db.delete(message)
+    db.commit()
+    return {"message": "deleted"}
