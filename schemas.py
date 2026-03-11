@@ -11,294 +11,206 @@ class UserCreate(BaseModel):
     password: str
     full_name: Optional[str] = None
 
+
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    headline: Optional[str] = None
-    bio: Optional[str] = None
+    full_name:  Optional[str] = None
+    headline:   Optional[str] = None
+    bio:        Optional[str] = None
+    location:   Optional[str] = None
+    website:    Optional[str] = None
     avatar_url: Optional[str] = None
-    cover_url: Optional[str] = None
-    location: Optional[str] = None
-    website: Optional[str] = None
+    cover_url:  Optional[str] = None
+    language:   Optional[str] = None
+
 
 class UserOut(BaseModel):
-    id: int
-    username: str
-    email: str
-    full_name: Optional[str]
-    headline: Optional[str]
-    bio: Optional[str]
-    avatar_url: Optional[str]
-    cover_url: Optional[str]
-    location: Optional[str]
-    website: Optional[str]
-    is_admin: bool = False
-    is_verified_company: bool = False
-    plan: str = "free"
-    created_at: datetime
-    followers_count: Optional[int] = 0
-    following_count: Optional[int] = 0
-    class Config:
-        orm_mode = True
+    id:                  int
+    username:            str
+    email:               str
+    full_name:           Optional[str]   = None
+    headline:            Optional[str]   = None
+    bio:                 Optional[str]   = None
+    location:            Optional[str]   = None
+    website:             Optional[str]   = None
+    avatar_url:          Optional[str]   = None
+    cover_url:           Optional[str]   = None
+    is_admin:            bool            = False
+    is_premium:          bool            = False
+    is_verified:         bool            = False
+    is_verified_company: bool            = False
+    is_active:           bool            = True
+    language:            Optional[str]   = "English"
+    followers_count:     Optional[int]   = 0
+    following_count:     Optional[int]   = 0
+    is_followed:         Optional[bool]  = False
+    created_at:          Optional[datetime] = None
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    user_id: Optional[int] = None
-
-
-# ─── Profile Sections ─────────────────────────────────────────
-
-class ExperienceCreate(BaseModel):
-    title: str
-    company: str
-    location: Optional[str] = ""
-    start_date: str
-    end_date: Optional[str] = None
-    is_current: bool = False
-    description: Optional[str] = ""
-
-class ExperienceOut(BaseModel):
-    id: int
-    title: str
-    company: str
-    location: Optional[str]
-    start_date: str
-    end_date: Optional[str]
-    is_current: bool
-    description: Optional[str]
-    created_at: datetime
-    class Config:
-        orm_mode = True
-
-class EducationCreate(BaseModel):
-    school: str
-    degree: str
-    field: Optional[str] = ""
-    start_date: str
-    end_date: Optional[str] = None
-    description: Optional[str] = ""
-
-class EducationOut(BaseModel):
-    id: int
-    school: str
-    degree: str
-    field: Optional[str]
-    start_date: str
-    end_date: Optional[str]
-    description: Optional[str]
-    created_at: datetime
-    class Config:
-        orm_mode = True
-
-class ProjectCreate(BaseModel):
-    title: str
-    description: Optional[str] = ""
-    url: Optional[str] = ""
-    image_url: Optional[str] = ""
-
-class ProjectOut(BaseModel):
-    id: int
-    title: str
-    description: Optional[str]
-    url: Optional[str]
-    image_url: Optional[str]
-    created_at: datetime
     class Config:
         orm_mode = True
 
 
-# ─── Posts ───────────────────────────────────────────────────
+# ─── Post ────────────────────────────────────────────────────
 
 class PostCreate(BaseModel):
-    content: str
-    image_url: Optional[str] = None
+    content:      str
+    image_url:    Optional[str] = None
     community_id: Optional[int] = None
-    tags: Optional[str] = None
-    feeling: Optional[str] = None
+    tags:         Optional[str] = None
+    feeling:      Optional[str] = None
+
 
 class PostOut(BaseModel):
-    id: int
-    content: str
-    image_url: Optional[str]
-    tags: Optional[str] = None
-    feeling: Optional[str] = None
-    author_id: int
-    created_at: datetime
-    likes_count: int = 0
-    comments_count: int = 0
-    is_liked: bool = False
-    user_reaction: Optional[str] = None
-    author: Optional[UserOut] = None
+    id:            int
+    content:       str
+    image_url:     Optional[str]  = None
+    tags:          Optional[str]  = None
+    feeling:       Optional[str]  = None
+    author_id:     int
+    community_id:  Optional[int]  = None
+    is_archived:   bool           = False
+    created_at:    datetime
+    likes_count:   int            = 0
+    comments_count:int            = 0
+    is_liked:      bool           = False
+    user_reaction: Optional[str]  = None
+    author:        Optional[UserOut] = None
+
     class Config:
         orm_mode = True
 
-class CommentCreate(BaseModel):
-    content: str
-
-class CommentOut(BaseModel):
-    id: int
-    content: str
-    author: UserOut
-    post_id: int
-    created_at: datetime
-    class Config:
-        orm_mode = True
 
 class FeedOut(BaseModel):
-    posts: List[PostOut]
-    total: int
-    page: int
+    posts:    List[PostOut]
+    total:    int
+    page:     int
     per_page: int
 
 
-# ─── Communities ─────────────────────────────────────────────
+# ─── Comment ─────────────────────────────────────────────────
 
-class CommunityCreate(BaseModel):
-    name: str
-    slug: str
-    description: Optional[str] = ""
-    avatar_url: Optional[str] = ""
-    cover_url: Optional[str] = ""
-    is_private: bool = False
+class CommentCreate(BaseModel):
+    content:   str
+    parent_id: Optional[int] = None
 
-class CommunityOut(BaseModel):
-    id: int
-    name: str
-    slug: str
-    description: Optional[str]
-    avatar_url: Optional[str]
-    cover_url: Optional[str]
-    is_private: bool
+
+class CommentOut(BaseModel):
+    id:         int
+    content:    str
+    author_id:  int
+    post_id:    int
+    parent_id:  Optional[int] = None
     created_at: datetime
-    members_count: Optional[int] = 0
+    author:     Optional[UserOut] = None
+
     class Config:
         orm_mode = True
 
 
-# ─── Events ──────────────────────────────────────────────────
+# ─── Follow ───────────────────────────────────────────────────
 
-class EventCreate(BaseModel):
-    title: str
-    description: Optional[str] = ""
-    cover_url: Optional[str] = ""
-    location: Optional[str] = ""
-    is_online: bool = False
-    online_url: Optional[str] = ""
-    start_date: datetime
-    end_date: datetime
-    max_attendees: Optional[int] = None
-    community_id: Optional[int] = None
+class FollowOut(BaseModel):
+    id:           int
+    follower_id:  int
+    following_id: int
+    created_at:   datetime
 
-class EventOut(BaseModel):
-    id: int
-    title: str
-    description: Optional[str]
-    cover_url: Optional[str]
-    location: Optional[str]
-    is_online: bool
-    online_url: Optional[str]
-    start_date: datetime
-    end_date: datetime
-    status: str
-    max_attendees: Optional[int]
-    created_by: int
-    community_id: Optional[int]
-    created_at: datetime
-    attendees_count: Optional[int] = 0
     class Config:
         orm_mode = True
 
 
-# ─── Jobs ────────────────────────────────────────────────────
+# ─── Notification ─────────────────────────────────────────────
+
+class NotificationOut(BaseModel):
+    id:           int
+    user_id:      int
+    type:         str
+    message:      str
+    is_read:      bool
+    post_id:      Optional[int]  = None
+    from_user_id: Optional[int]  = None
+    created_at:   datetime
+
+    class Config:
+        orm_mode = True
+
+
+# ─── Token ───────────────────────────────────────────────────
+
+class Token(BaseModel):
+    access_token: str
+    token_type:   str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+# ─── Job ─────────────────────────────────────────────────────
 
 class JobCreate(BaseModel):
-    title: str
-    description: str
-    requirements: Optional[str] = ""
-    location: Optional[str] = ""
-    is_remote: bool = False
-    job_type: str = "full_time"
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    salary_currency: str = "USD"
+    title:        str
+    company:      str
+    location:     Optional[str] = None
+    description:  Optional[str] = None
+    salary_range: Optional[str] = None
+    job_type:     Optional[str] = None
+
 
 class JobOut(BaseModel):
-    id: int
-    title: str
-    description: str
-    requirements: Optional[str]
-    location: Optional[str]
-    is_remote: bool
-    job_type: str
-    salary_min: Optional[float]
-    salary_max: Optional[float]
-    salary_currency: str
-    company_id: int
-    is_active: bool
-    created_at: datetime
-    applications_count: Optional[int] = 0
-    class Config:
-        orm_mode = True
+    id:           int
+    title:        str
+    company:      str
+    location:     Optional[str] = None
+    description:  Optional[str] = None
+    salary_range: Optional[str] = None
+    job_type:     Optional[str] = None
+    poster_id:    Optional[int] = None
+    created_at:   datetime
 
-class JobApplicationCreate(BaseModel):
-    cover_letter: Optional[str] = ""
-    resume_url: Optional[str] = ""
-
-class JobApplicationOut(BaseModel):
-    id: int
-    job_id: int
-    applicant_id: int
-    cover_letter: Optional[str]
-    resume_url: Optional[str]
-    status: str
-    created_at: datetime
     class Config:
         orm_mode = True
 
 
-# ─── Messages ────────────────────────────────────────────────
+# ─── Message ─────────────────────────────────────────────────
 
 class MessageCreate(BaseModel):
-    content: str
-    receiver_id: Optional[int] = None
-    group_id: Optional[int] = None
+    receiver_id: int
+    content:     str
+
 
 class MessageOut(BaseModel):
-    id: int
-    sender_id: int
-    receiver_id: Optional[int]
-    group_id: Optional[int]
-    content: str
-    is_read: bool
-    created_at: datetime
-    class Config:
-        orm_mode = True
+    id:          int
+    sender_id:   int
+    receiver_id: int
+    content:     str
+    is_read:     bool
+    created_at:  datetime
 
-class GroupCreate(BaseModel):
-    name: str
-    avatar_url: Optional[str] = ""
-    member_ids: List[int] = []
-
-class GroupOut(BaseModel):
-    id: int
-    name: str
-    avatar_url: Optional[str]
-    created_at: datetime
-    members_count: Optional[int] = 0
     class Config:
         orm_mode = True
 
 
-# ─── Admin ───────────────────────────────────────────────────
+# ─── Event ───────────────────────────────────────────────────
 
-class AdminUserUpdate(BaseModel):
-    is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
-    is_verified_company: Optional[bool] = None
-    plan: Optional[str] = None
+class EventCreate(BaseModel):
+    title:       str
+    description: Optional[str] = None
+    location:    Optional[str] = None
+    start_date:  Optional[datetime] = None
+    end_date:    Optional[datetime] = None
+    image_url:   Optional[str] = None
+
+
+class EventOut(BaseModel):
+    id:           int
+    title:        str
+    description:  Optional[str]      = None
+    location:     Optional[str]      = None
+    start_date:   Optional[datetime] = None
+    end_date:     Optional[datetime] = None
+    image_url:    Optional[str]      = None
+    organizer_id: Optional[int]      = None
+    created_at:   datetime
+
+    class Config:
+        orm_mode = True
