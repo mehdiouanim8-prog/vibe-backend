@@ -134,7 +134,20 @@ class Community(Base):
     owner_id    = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
 
-    posts = relationship("Post", back_populates=None)
+    members = relationship("CommunityMember", back_populates="community", cascade="all, delete")
+
+
+class CommunityMember(Base):
+    __tablename__ = "community_members"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    community_id = Column(Integer, ForeignKey("communities.id"), nullable=False)
+    user_id      = Column(Integer, ForeignKey("users.id"), nullable=False)
+    role         = Column(String, default="member")
+    created_at   = Column(DateTime(timezone=True), server_default=func.now())
+
+    community = relationship("Community", back_populates="members")
+    user      = relationship("User")
 
 
 class Event(Base):
