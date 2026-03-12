@@ -6,14 +6,14 @@ from datetime import datetime
 # ─── User ────────────────────────────────────────────────────
 
 class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
+    username:  str
+    email:     EmailStr
+    password:  str
     full_name: Optional[str] = None
 
 
 class UserLogin(BaseModel):
-    username: str
+    email:    str
     password: str
 
 
@@ -28,27 +28,44 @@ class UserUpdate(BaseModel):
     language:   Optional[str] = None
 
 
+# Full UserOut — used for /users/me and /users/{id}
+# followers_count etc. are injected manually in users.py, NOT from ORM
 class UserOut(BaseModel):
     id:                  int
     username:            str
     email:               str
-    full_name:           Optional[str]   = None
-    headline:            Optional[str]   = None
-    bio:                 Optional[str]   = None
-    location:            Optional[str]   = None
-    website:             Optional[str]   = None
-    avatar_url:          Optional[str]   = None
-    cover_url:           Optional[str]   = None
-    is_admin:            bool            = False
-    is_premium:          bool            = False
-    is_verified:         bool            = False
-    is_verified_company: bool            = False
-    is_active:           bool            = True
-    language:            Optional[str]   = "English"
-    followers_count:     Optional[int]   = 0
-    following_count:     Optional[int]   = 0
-    is_followed:         Optional[bool]  = False
+    full_name:           Optional[str]  = None
+    headline:            Optional[str]  = None
+    bio:                 Optional[str]  = None
+    location:            Optional[str]  = None
+    website:             Optional[str]  = None
+    avatar_url:          Optional[str]  = None
+    cover_url:           Optional[str]  = None
+    is_admin:            bool           = False
+    is_premium:          bool           = False
+    is_verified:         bool           = False
+    is_verified_company: bool           = False
+    is_active:           bool           = True
+    language:            Optional[str]  = "English"
+    followers_count:     Optional[int]  = 0
+    following_count:     Optional[int]  = 0
+    is_followed:         Optional[bool] = False
     created_at:          Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
+# Minimal author embedded inside PostOut — only pure DB columns, no computed fields
+class AuthorOut(BaseModel):
+    id:                  int
+    username:            str
+    full_name:           Optional[str] = None
+    headline:            Optional[str] = None
+    avatar_url:          Optional[str] = None
+    is_verified:         bool          = False
+    is_verified_company: bool          = False
+    is_premium:          bool          = False
 
     class Config:
         orm_mode = True
@@ -65,20 +82,20 @@ class PostCreate(BaseModel):
 
 
 class PostOut(BaseModel):
-    id:            int
-    content:       str
-    image_url:     Optional[str]  = None
-    tags:          Optional[str]  = None
-    feeling:       Optional[str]  = None
-    author_id:     int
-    community_id:  Optional[int]  = None
-    is_archived:   bool           = False
-    created_at:    datetime
-    likes_count:   int            = 0
-    comments_count:int            = 0
-    is_liked:      bool           = False
-    user_reaction: Optional[str]  = None
-    author:        Optional[UserOut] = None
+    id:             int
+    content:        str
+    image_url:      Optional[str]    = None
+    tags:           Optional[str]    = None
+    feeling:        Optional[str]    = None
+    author_id:      int
+    community_id:   Optional[int]    = None
+    is_archived:    bool             = False
+    created_at:     datetime
+    likes_count:    int              = 0
+    comments_count: int              = 0
+    is_liked:       bool             = False
+    user_reaction:  Optional[str]    = None
+    author:         Optional[AuthorOut] = None
 
     class Config:
         orm_mode = True
@@ -105,35 +122,7 @@ class CommentOut(BaseModel):
     post_id:    int
     parent_id:  Optional[int] = None
     created_at: datetime
-    author:     Optional[UserOut] = None
-
-    class Config:
-        orm_mode = True
-
-
-# ─── Follow ───────────────────────────────────────────────────
-
-class FollowOut(BaseModel):
-    id:           int
-    follower_id:  int
-    following_id: int
-    created_at:   datetime
-
-    class Config:
-        orm_mode = True
-
-
-# ─── Notification ─────────────────────────────────────────────
-
-class NotificationOut(BaseModel):
-    id:           int
-    user_id:      int
-    type:         str
-    message:      str
-    is_read:      bool
-    post_id:      Optional[int]  = None
-    from_user_id: Optional[int]  = None
-    created_at:   datetime
+    author:     Optional[AuthorOut] = None
 
     class Config:
         orm_mode = True
@@ -199,11 +188,11 @@ class MessageOut(BaseModel):
 
 class EventCreate(BaseModel):
     title:       str
-    description: Optional[str] = None
-    location:    Optional[str] = None
+    description: Optional[str]    = None
+    location:    Optional[str]    = None
     start_date:  Optional[datetime] = None
     end_date:    Optional[datetime] = None
-    image_url:   Optional[str] = None
+    image_url:   Optional[str]    = None
 
 
 class EventOut(BaseModel):
@@ -215,6 +204,22 @@ class EventOut(BaseModel):
     end_date:     Optional[datetime] = None
     image_url:    Optional[str]      = None
     organizer_id: Optional[int]      = None
+    created_at:   datetime
+
+    class Config:
+        orm_mode = True
+
+
+# ─── Notification ─────────────────────────────────────────────
+
+class NotificationOut(BaseModel):
+    id:           int
+    user_id:      int
+    type:         str
+    message:      str
+    is_read:      bool
+    post_id:      Optional[int] = None
+    from_user_id: Optional[int] = None
     created_at:   datetime
 
     class Config:
