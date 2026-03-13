@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -14,11 +14,11 @@ router = APIRouter(prefix="/events", tags=["Events"])
 
 class EventCreate(BaseModel):
     title:       str
-    description: Optional[str] = None
-    location:    Optional[str] = None
+    description: Optional[str]    = None
+    location:    Optional[str]    = None
     start_date:  Optional[datetime] = None
     end_date:    Optional[datetime] = None
-    image_url:   Optional[str] = None
+    image_url:   Optional[str]    = None
 
 class EventOut(BaseModel):
     id:           int
@@ -40,7 +40,7 @@ def list_events(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return db.query(Event).order_by(Event.start_date).all()
+    return db.query(Event).order_by(Event.created_at.desc()).all()
 
 
 @router.post("/", response_model=EventOut, status_code=201)
