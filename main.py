@@ -47,6 +47,13 @@ def run_migrations():
                         conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
                         conn.commit()
 
+            # ─── FIX: add missing comments.parent_id column ───
+            if "comments" in existing_tables:
+                cols = [c["name"] for c in inspector.get_columns("comments")]
+                if "parent_id" not in cols:
+                    conn.execute(text("ALTER TABLE comments ADD COLUMN parent_id INTEGER REFERENCES comments(id)"))
+                    conn.commit()
+
     except Exception as e:
         print(f"Migration warning (non-fatal): {e}")
 
