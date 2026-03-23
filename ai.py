@@ -6,7 +6,7 @@ import os
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from auth import get_current_user
+from security import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
