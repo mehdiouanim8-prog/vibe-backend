@@ -5,7 +5,7 @@ Key lives only in Railway env vars: GIPHY_API_KEY
 import os
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
-from auth import get_current_user
+from security import get_current_user
 
 router = APIRouter(prefix="/gifs", tags=["GIFs"])
 GIPHY_BASE = "https://api.giphy.com/v1/gifs"
