@@ -1,26 +1,17 @@
 """
-app/routers/ai.py  —  Groq proxy for Element
-Key lives only in Railway env vars. Frontend never sees it.
+ai.py  —  Groq proxy for Element (flat structure)
+Key lives only in Railway env vars: GROQ_API_KEY
 """
-
 import os
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from app.routers.auth import get_current_user
-from app.models import User
+from auth import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-8b-instant"
-
-
-def get_groq_key():
-    key = os.getenv("GROQ_API_KEY")
-    if not key:
-        raise HTTPException(status_code=503, detail="AI service not configured.")
-    return key
 
 
 class AIRequest(BaseModel):
@@ -36,10 +27,11 @@ class AIResponse(BaseModel):
 @router.post("/generate", response_model=AIResponse)
 async def generate(
     body: AIRequest,
-    current_user: User = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
-    """Proxy Groq — key never leaves the server."""
-    key = get_groq_key()
+    key = os.getenv("GROQ_API_KEY")
+    if not key:
+        raise HTTPException(status_code=503, detail="AI service not configured.")
 
     async with httpx.AsyncClient(timeout=30) as client:
         res = await client.post(
