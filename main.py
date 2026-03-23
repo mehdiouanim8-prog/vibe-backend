@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text, inspect
 from database import engine, Base
 import auth, users, posts, profiles, communities, events, jobs, messages, admin
-from app.routers import ai
+from routers import ai
 app.include_router(ai.router)
 
 # ─── Safe DB Migrations ───────────────────────────────────────
