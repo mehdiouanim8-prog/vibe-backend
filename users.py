@@ -28,6 +28,7 @@ def enrich_user(user: User, current_user: User, db: Session) -> dict:
         "is_verified":         user.is_verified,
         "is_verified_company": user.is_verified_company,
         "is_active":           user.is_active,
+        "profile_completed":   user.profile_completed,
         "language":            user.language,
         "created_at":          user.created_at,
         "followers_count":     len(user.followers),

@@ -26,6 +26,7 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     cover_url:  Optional[str] = None
     language:   Optional[str] = None
+    profile_completed: Optional[bool] = None
 
 
 # Full UserOut — used for /users/me and /users/{id}
@@ -46,6 +47,7 @@ class UserOut(BaseModel):
     is_verified:         bool           = False
     is_verified_company: bool           = False
     is_active:           bool           = True
+    profile_completed:   bool          = False
     language:            Optional[str]  = "English"
     followers_count:     Optional[int]  = 0
     following_count:     Optional[int]  = 0

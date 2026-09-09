@@ -21,6 +21,7 @@ class User(Base):
     is_admin         = Column(Boolean, default=False)
     is_premium       = Column(Boolean, default=False)
     is_verified      = Column(Boolean, default=False)
+    profile_completed = Column(Boolean, default=False)
     is_verified_company = Column(Boolean, default=False)
     is_active        = Column(Boolean, default=True)
     is_on_hold       = Column(Boolean, default=False)

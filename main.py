@@ -38,6 +38,7 @@ def run_migrations():
                     ("is_verified","BOOLEAN DEFAULT FALSE"),
                     ("is_on_hold", "BOOLEAN DEFAULT FALSE"),
                     ("language",   "VARCHAR DEFAULT 'English'"),
+                    ("profile_completed", "BOOLEAN DEFAULT FALSE"),
                 ]:
                     if col not in cols:
                         conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
