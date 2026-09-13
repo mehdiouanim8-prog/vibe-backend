@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text, inspect
 from database import engine, Base
 import auth, users, posts, profiles, communities, events, jobs, messages, admin, ai, gifs
+import kyc, phone, two_factor, email_verification
 
 # ─── Safe DB Migrations ───────────────────────────────────────
 def run_migrations():
@@ -75,6 +76,10 @@ app.include_router(messages.router)
 app.include_router(admin.router)
 app.include_router(ai.router)
 app.include_router(gifs.router)
+app.include_router(kyc.router)
+app.include_router(phone.router)
+app.include_router(two_factor.router)
+app.include_router(email_verification.router)
 
 @app.get("/", tags=["Health"])
 def root():
