@@ -9,7 +9,12 @@ from database import get_db
 from models import User
 import os
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+
+if len(SECRET_KEY) < 32:
+    raise RuntimeError(
+        "SECRET_KEY must be configured and at least 32 characters long."
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
