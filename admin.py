@@ -1,10 +1,15 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
+
 from database import get_db
 from models import User, Post, Notification, KYCVerification
 from security import get_current_user
+from storage import resolve_key
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -357,3 +362,150 @@ def admin_reject_kyc(
         "review_status": kyc.review_status,
         "next_step": "identity",
     }
+# ─── Secure KYC File Viewing ─────────────────────────────────
+
+@router.get("/kyc/{kyc_id}/document/front")
+def admin_view_document_front(
+    kyc_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    kyc = (
+        db.query(KYCVerification)
+        .filter(KYCVerification.id == kyc_id)
+        .first()
+    )
+
+    if not kyc:
+        raise HTTPException(
+            status_code=404,
+            detail="KYC application not found"
+        )
+
+    if not kyc.document_front_storage_key:
+        raise HTTPException(
+            status_code=404,
+            detail="Front document not found"
+        )
+
+    try:
+        path = resolve_key(kyc.document_front_storage_key)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    return FileResponse(
+        path=str(path),
+        headers={
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+        }
+    )
+
+
+@router.get("/kyc/{kyc_id}/document/back")
+def admin_view_document_back(
+    kyc_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    kyc = (
+        db.query(KYCVerification)
+        .filter(KYCVerification.id == kyc_id)
+        .first()
+    )
+
+    if not kyc:
+        raise HTTPException(
+            status_code=404,
+            detail="KYC application not found"
+        )
+
+    if not kyc.document_back_storage_key:
+        raise HTTPException(
+            status_code=404,
+            detail="Back document not found"
+        )
+
+    try:
+        path = resolve_key(kyc.document_back_storage_key)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    return FileResponse(
+        path=str(path),
+        headers={
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+        }
+    )
+
+
+@router.get("/kyc/{kyc_id}/liveness")
+def admin_view_liveness(
+    kyc_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    kyc = (
+        db.query(KYCVerification)
+        .filter(KYCVerification.id == kyc_id)
+        .first()
+    )
+
+    if not kyc:
+        raise HTTPException(
+            status_code=404,
+            detail="KYC application not found"
+        )
+
+    if not kyc.liveness_storage_key:
+        raise HTTPException(
+            status_code=404,
+            detail="Liveness video not found"
+        )
+
+    try:
+        path = resolve_key(kyc.liveness_storage_key)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=404,
+            detail="Liveness video not found"
+        )
+
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Liveness video not found"
+        )
+
+    return FileResponse(
+        path=str(path),
+        headers={
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+        }
+    )
