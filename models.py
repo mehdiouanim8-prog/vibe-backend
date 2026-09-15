@@ -28,6 +28,27 @@ class User(Base):
     phone_number = Column(String(32), nullable=True)
     phone_verified = Column(Boolean, default=False, nullable=False)
 
+    phone_verification_attempts = Column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+
+    phone_verification_locked_until = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    phone_verification_last_sent_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    phone_verification_channel = Column(
+        String(16),
+        nullable=True,
+    )
+
     email_verified = Column(Boolean, default=False, nullable=False)
 
     account_status = Column(String(32), default="pending", nullable=False)
